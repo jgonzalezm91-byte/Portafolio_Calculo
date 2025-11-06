@@ -27,7 +27,7 @@ const nextBtn      = document.getElementById("nextBtn");
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  // Creamos la instancia PageFlip sobre el contenedor raíz.
+  // Instancia PageFlip sobre el contenedor raíz.
   // IMPORTANTE: St.PageFlip viene de page-flip.browser.min.js
   pageFlipInstance = new St.PageFlip(flipbookRoot, {
     width: 1200,      // ancho base de UNA página
@@ -45,11 +45,11 @@ window.addEventListener("DOMContentLoaded", () => {
     drawShadow: true,
     flippingTime: 900,
 
-    // ⚫ Fondo del área del libro (por defecto es blanco)
+    // Fondo del área del libro 
     backgroundColor: "#000000",
   });
 
-  // 👇👇 BLOQUE CRÍTICO: forzar fondo negro real del canvas 👇👇
+  
   const observer = new MutationObserver(() => {
     const canvas = flipbookRoot.querySelector("canvas");
     if (canvas) {
@@ -66,7 +66,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
   observer.observe(flipbookRoot, { childList: true, subtree: true });
-  // 👆👆 FIN BLOQUE CRÍTICO 👆👆
+  
 
   // Array de todas las páginas del libro.
   const allImages = [];
