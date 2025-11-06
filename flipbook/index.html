@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+  />
+  <title>Flipbook · Cálculo</title>
+
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Librería StPageFlip (build browser) -->
+  <!-- Usa CDN público de la lib page-flip.browser.min.js (St.PageFlip) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"
+    defer
+  ></script>
+
+  <!-- Nuestro script -->
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- Barra superior -->
+  <header class="fb-bar">
+    <div class="fb-bar-left">
+      <span class="fb-book-title" id="bookTitle">
+        James Stewart – Cálculo (edición de estudio)
+      </span>
+      <span class="fb-counter" id="pageCounter">1 / --</span>
+    </div>
+    <div class="fb-bar-right">
+      <button class="fb-btn" id="prevBtn" aria-label="Página anterior">⟵</button>
+      <button class="fb-btn" id="nextBtn" aria-label="Página siguiente">⟶</button>
+    </div>
+  </header>
+
+  <!-- Escena del libro -->
+  <main class="fb-stage">
+    <div class="fb-book-surface">
+      <div class="flipbook-shell">
+        <!-- Contenedor raíz donde StPageFlip monta las páginas -->
+        <div id="flipbook"></div>
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

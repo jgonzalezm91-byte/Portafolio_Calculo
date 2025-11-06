@@ -1,0 +1,324 @@
+/* =======================
+   BASE GENERAL
+======================= */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #000; /* fondo negro absoluto */
+  color: #fff;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Noto Sans', sans-serif;
+  overflow: hidden;
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* =======================
+   BARRA SUPERIOR (título, páginas, botones)
+======================= */
+.fb-bar {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(255,255,255,.25);
+}
+
+.fb-bar-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+}
+
+.fb-book-title {
+  background: rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow:
+    0 10px 20px rgba(0,0,0,.8),
+    0 0 20px rgba(255,255,255,.08) inset;
+  white-space: nowrap;
+  max-width: 60vw;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.fb-counter {
+  min-width: 56px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 6px;
+  padding: 6px 10px;
+  box-shadow:
+    0 10px 20px rgba(0,0,0,.8),
+    0 0 20px rgba(255,255,255,.08) inset;
+}
+
+.fb-bar-right {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.fb-btn {
+  cursor: pointer;
+  min-width: 40px;
+  min-height: 32px;
+  line-height: 1;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 6px;
+  box-shadow:
+    0 14px 24px rgba(0,0,0,.85),
+    0 0 20px rgba(255,255,255,.1) inset;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all .15s ease;
+}
+.fb-btn:hover {
+  background: rgba(255,255,255,.12);
+  box-shadow:
+    0 18px 28px rgba(0,0,0,.9),
+    0 0 28px rgba(255,255,255,.2) inset;
+}
+
+/* =======================
+   CONTENEDOR ESCENA (zona donde vive el libro)
+======================= */
+.fb-stage {
+  width: 100%;
+  height: calc(100vh - 20px); /* <- libro MUCHO más alto en pantalla */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+
+  /* Fondo oscuro con ligero gradiente radial */
+  background: radial-gradient(circle at 50% 50%, #050a14 0%, #000 70%);
+  overflow: hidden;
+}
+
+/* Contenedor directo dentro de la escena */
+.fb-book-surface {
+  width: 100%;
+  height: 100%;
+  max-width: 1800px;   /* ancho máximo muy grande */
+  max-height: 1200px;  /* alto máximo muy grande */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Contenedor central que aloja el flipbook */
+.flipbook-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* =======================
+   NODO RAÍZ DEL LIBRO
+======================= */
+#flipbook {
+  /* obliga al libro a usar TODO el espacio disponible */
+  width: 100% !important;
+  height: 100% !important;
+
+  background: transparent !important;
+  border: none !important;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+
+  /* sombra envolvente para separar el libro del fondo */
+  box-shadow:
+    0 0 50px rgba(0, 0, 0, 0.9),
+    0 0 150px rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================
+   EFECTO GLOW / HALO AZUL DETRÁS DEL LIBRO
+========================================================== */
+#flipbook::before {
+  content: "";
+  position: absolute;
+  inset: -30px;
+  border-radius: 20px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(56, 189, 248, 0.25) 0%,
+    rgba(37, 99, 235, 0.15) 30%,
+    rgba(11, 18, 32, 0) 70%
+  );
+  filter: blur(40px);
+  z-index: -2;
+  pointer-events: none;
+  animation: glowPulse 8s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%   { opacity: 0.3; transform: scale(1); }
+  50%  { opacity: 0.7; transform: scale(1.1); }
+  100% { opacity: 0.3; transform: scale(1); }
+}
+
+/* ==========================================================
+   ESTILOS QUE OSCURECEN / UNIFICAN LAS PÁGINAS
+   - objetivo: que el "papel blanco gigante" no destruya la estética.
+   - también subimos contraste para que el contenido se lea mejor.
+========================================================== */
+
+/* Las capas que StPageFlip crea para cada página */
+.stf__page,
+.stf__item,
+.page,
+.page .page__content {
+  background: #000 !important; /* fondo negro sólido detrás de cada página */
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* El canvas donde se dibuja la imagen escaneada de la página */
+.page canvas,
+.stf__item canvas,
+.stf__page canvas {
+  background: #000 !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  /* Oscurece un toque el blanco para que no sea una sábana brillante,
+     y aumenta contraste del texto dentro */
+  filter: brightness(0.9) contrast(1.15);
+}
+
+/* Quita brillos/blancos extra del lomo/sombra interna */
+.stf__shadow,
+.stf__hard-page,
+.stf__block {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* =======================
+   RESPONSIVE
+======================= */
+@media (max-width: 900px){
+  .fb-bar {
+    font-size: 12px;
+  }
+  .fb-btn {
+    min-width: 36px;
+    min-height: 28px;
+    font-size: 14px;
+  }
+
+  .fb-stage {
+    height: calc(100vh - 40px); /* en pantallas chicas seguimos llenando casi todo */
+  }
+
+  #flipbook {
+    border-radius: 8px;
+  }
+}
+/* --- Fix layout botones de navegación derecha --- */
+
+/* Asegura que la barra pueda envolver bien el contenido
+   y deja margen interno suficiente a la derecha */
+.fb-bar {
+  flex-wrap: wrap;
+  padding-right: 64px; /* <- espacio extra a la derecha para que no se corte el botón */
+  position: relative;
+}
+
+/* Empuja el bloque de botones un poco hacia adentro,
+   y evita que se pegue totalmente al borde derecho */
+.fb-bar-right {
+  display: flex;
+  gap: 8px;
+  position: relative;
+  right: 0;
+  margin-left: auto;   /* se va a la derecha */
+  padding-right: 20px;  /* respiración respecto del borde */
+}
+
+/* Botones en sí: tamaño fijo y borde visible siempre */
+.fb-bar-right .fb-btn {
+  min-width: 40px;
+  min-height: 32px;
+  padding: 0 10px;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 6px;
+  box-shadow:
+    0 14px 24px rgba(0,0,0,.85),
+    0 0 20px rgba(255,255,255,.15) inset;
+  line-height: 1;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* Cuando la pantalla se hace MUY chica,
+   mandamos la parte derecha a la siguiente línea
+   (para que nunca se recorten los botones) */
+@media (max-width: 600px) {
+  .fb-bar {
+    padding-right: 16px; /* menos padding en mobile */
+  }
+
+  .fb-bar-right {
+    width: 100%;
+    justify-content: flex-end;
+    padding-right: 0;
+    margin-top: 8px;
+  }
+}
+/* ==========================================================
+   AJUSTE FINAL DE FONDO NEGRO EN PÁGINAS Y CANVAS
+   (Forzar a StPageFlip a usar negro puro)
+========================================================== */
+
+#flipbook,
+.stf__page,
+.stf__item,
+.stf__block,
+.stf__hard-page {
+  background-color: #000 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.page canvas,
+.stf__page canvas {
+  background-color: #000 !important;
+  filter: brightness(0.95) contrast(1.1);
+}

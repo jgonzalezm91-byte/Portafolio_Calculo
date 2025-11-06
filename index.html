@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculus Hub — Buscador de temas</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: #0f172aee;
+      --text: #e5e7eb;
+      --muted: #93a2b2;
+      --border: #1f2a44;
+      --accent: #38bdf8;
+      --t1: #0ea5e95e;
+      --t2: #22c55e3d;
+      --t3: #ffffff08;
+      --overscan: 16px;        /* margen extra para cubrir cortes */
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      color:var(--text);
+      background: transparent;
+      overflow-x:hidden;
+    }
+
+    /* Capa base del fondo: gradiente oscuro continuo SIN cortes */
+    .bg-base{
+      position:fixed;
+      inset: calc(var(--overscan) * -1);
+      z-index:-3;
+      pointer-events:none;
+      background:
+        radial-gradient(
+          1200px 800px at 10% -10%,
+          #10203b 0%,
+          #0b1220 50%,
+          #0a0f1b 100%
+        );
+      transform:translateZ(0);
+    }
+
+    /* Capa partículas */
+    .bg-wrap{
+      position:fixed;
+      inset: calc(var(--overscan) * -1);
+      z-index:-2;
+      pointer-events:none;
+      overflow:hidden;
+      transform:translateZ(0);
+    }
+    canvas#calc-particles{
+      display:block;
+      width:100%;
+      height:100%;
+      filter:contrast(1.05) saturate(1.05);
+    }
+
+    /* Luces de color y viñetas */
+    .bg-vignette{
+      position:fixed;
+      inset: calc(var(--overscan) * -1);
+      z-index:-1;
+      pointer-events:none;
+      background:
+        radial-gradient(1000px 600px at 80% 10%, var(--t1), transparent 60%),
+        radial-gradient(900px 600px at 20% 90%, var(--t2), transparent 60%),
+        radial-gradient(1600px 900px at 50% 30%, var(--t3), transparent 60%);
+      mix-blend-mode:screen;
+      transform:translateZ(0);
+    }
+
+    .container{
+      max-width:1120px;
+      margin-inline:auto;
+      padding:24px;
+      position:relative;
+      z-index:10;
+    }
+
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      padding-top:24px;
+      padding-bottom:8px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(24px,3vw,32px);
+      font-weight:800;
+    }
+    .subtitle{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .team{
+      color:var(--muted);
+      text-align:right;
+      font-size:14px;
+    }
+    .team .label{
+      font-weight:600;
+      color:#a7b4c3;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow:0 10px 30px rgba(2,8,23,.35);
+      padding:16px;
+      backdrop-filter: blur(6px);
+    }
+
+    form.search{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .input{
+      flex:1;
+      border:1px solid var(--border);
+      background:#0b1220aa;
+      color:var(--text);
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:16px;
+      min-width:200px;
+    }
+    .input:focus{
+      outline:3px solid #1f365f;
+    }
+    .btn{
+      border:0;
+      background:var(--accent);
+      color:#06233a;
+      border-radius:12px;
+      padding:12px 16px;
+      font-weight:800;
+      cursor:pointer;
+      flex-shrink:0;
+    }
+    .btn:hover{
+      filter:brightness(1.05);
+    }
+
+    .result{
+      margin-top:16px;
+      display:none;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:16px;
+      background:#0b1220b5;
+    }
+    .box h2{
+      margin:0 0 6px 0;
+      font-size:20px;
+    }
+    .box h3{
+      margin:12px 0 4px 0;
+      font-size:15px;
+    }
+    .muted{
+      color:var(--muted);
+    }
+
+    .empty{
+      margin-top:16px;
+      border:1px dashed var(--border);
+      border-radius:16px;
+      padding:16px;
+      text-align:center;
+      color:#a8bacb;
+      display:none;
+      background:#0b1220a8;
+      white-space:pre-line;
+    }
+
+    /* Flipbook fijo */
+    .flipbook{
+      margin-top:24px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      overflow:hidden;
+      background:#06101f;
+      box-shadow:0 10px 30px rgba(2,8,23,.5);
+    }
+    .flipbook__head{
+      padding:10px 14px;
+      border-bottom:1px solid var(--border);
+      background:#0b162a;
+      color:#c8d3df;
+      font-size:14px;
+      font-weight:600;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      row-gap:8px;
+    }
+    .flipbook__title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:600;
+    }
+    .flipbook__hint{
+      font-size:12px;
+      color:#6b7a8c;
+      font-weight:400;
+    }
+    .flipbook__body{
+      aspect-ratio:16/9;
+      width:100%;
+      background:#000;
+    }
+    .flipbook__body iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#000;
+      display:block;
+      border-radius:0; /* el libro trae su propio borde interno */
+    }
+
+    /* ====== SUBSECCIONES DEL RESULTADO ====== */
+    .subs{
+      margin-top:16px;
+      border-top:1px solid var(--border);
+      padding-top:16px;
+    }
+    .subs-block{
+      margin-bottom:12px;
+      background:#0f172a66;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+    }
+    .subs-block h4{
+      margin:0 0 4px 0;
+      font-size:14px;
+      font-weight:600;
+      color:var(--accent);
+    }
+    .subs-block p{
+      margin:0;
+      font-size:14px;
+      line-height:1.4;
+      color:var(--text);
+      white-space:pre-line;
+    }
+
+    /* ====== OVERLAY OSCURO DETRÁS DEL ÍNDICE ====== */
+    .index-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .28s cubic-bezier(.22,1,.36,1);
+      z-index: ninetyNine;
+      /* z-index alto pero debajo del drawer */
+      z-index:99;
+    }
+    .index-overlay.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    /* ====== BARRA LATERAL (ÍNDICE) ====== */
+    .index-drawer{
+      position:fixed;
+      top:0; right:0; bottom:0;
+      width:min(360px, 90vw);
+      background:#0f172acc; /* coherente con tu card */
+      backdrop-filter: blur(6px);
+      border-left:1px solid var(--border);
+      box-shadow: -12px 0 30px rgba(2,8,23,.45);
+      transform: translateX(100%);
+      transition: transform .28s cubic-bezier(.22,1,.36,1);
+      z-index:100; /* por encima de overlay */
+      display:flex;
+      flex-direction:column;
+    }
+    .index-drawer.open{
+      transform: translateX(0);
+    }
+    .index-drawer__head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      background:#0b162a;
+    }
+    .index-drawer__title{
+      margin:0;
+      font-size:14px;
+      font-weight:700;
+      color:#c8d3df;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .index-drawer__close{
+      border:1px solid var(--border);
+      background:#1e293b;
+      color:var(--text);
+      border-radius:10px;
+      width:32px;
+      height:32px;
+      line-height:30px;
+      text-align:center;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .index-drawer__close:hover{
+      filter:brightness(1.08);
+    }
+    .index-drawer__list{
+      padding:10px 10px 14px 10px;
+      overflow:auto;
+      flex:1;
+    }
+    .index-drawer__item{
+      margin:0 0 8px 0;
+      padding:10px 12px;
+      background:#0b1220b5;
+      border:1px solid var(--border);
+      border-radius:12px;
+      font-size:14px;
+      font-weight:600;
+      color:var(--text);
+      cursor:pointer;
+      transition: transform .06s ease;
+      line-height:1.35;
+    }
+    .index-drawer__item:hover{
+      transform: translateX(-2px);
+      border-color:#284066;
+    }
+
+    footer{
+      padding:24px 0 32px 0;
+      text-align:center;
+      color:#8aa0b5;
+      font-size:12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fondo en capas SIN cortes -->
+  <div class="bg-base"></div>
+  <div class="bg-wrap"><canvas id="calc-particles"></canvas></div>
+  <div class="bg-vignette" aria-hidden="true"></div>
+
+  <div class="container">
+    <header>
+      <div>
+        <h1>📘 Calculus Hub</h1>
+        <p class="subtitle">
+          ¿PERO NOS EXONERARÁ DEL EXAMEN POR TREMENDO DESARROLLO DE APP O NADOTA?
+        </p>
+      </div>
+      <div class="team">
+        <div class="label">Proyecto de:</div>
+        <div>👤 Ernesto Emanuél Santizo Santizo 1990-24-1077</div>
+        <div>👤 José Daniel Gonzáles Monroy 5390-24-19904</div>
+      </div>
+    </header>
+
+    <main>
+      <div class="card">
+        <!-- Buscador -->
+        <form class="search" id="search-form">
+          <input id="q" class="input" placeholder="Ej: Técnicas de integración" autocomplete="off" />
+          <button class="btn" type="submit">Buscar</button>
+          <button class="btn" type="button" id="btn-index">Índice</button>
+        </form>
+
+        <!-- Mensaje vacío / no encontrado -->
+        <div id="empty" class="empty"></div>
+
+        <!-- Resultado del tema -->
+        <section id="result" class="result">
+          <div class="box">
+            <h2 id="res-title">—</h2>
+
+            <h3>Definición</h3>
+            <p id="res-def">—</p>
+
+            <h3>Ejemplo</h3>
+            <p id="res-ex">—</p>
+
+            <div id="res-subs" class="subs"></div>
+          </div>
+        </section>
+
+        <!-- Flipbook SIEMPRE visible (iframe fijo) -->
+        <section class="flipbook">
+          <div class="flipbook__head">
+            <div class="flipbook__title">
+              <span>Flipbook:</span>
+              <span>James Stewart – Cálculo (edición de estudio)</span>
+            </div>
+            <div class="flipbook__hint">
+              Páginas navegables tipo libro • Click / swipe / ← →
+            </div>
+          </div>
+          <div class="flipbook__body">
+            <iframe
+              id="flip-iframe"
+              src="flipbook/index.html"
+              title="Flipbook de Cálculo">
+            </iframe>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <footer>HECHO CON ❤️ PARA APRENDER CÁLCULO</footer>
+  </div>
+
+  <!-- ====== OVERLAY DEL ÍNDICE ====== -->
+  <div id="index-overlay" class="index-overlay"></div>
+
+  <!-- ====== BARRA LATERAL (ÍNDICE) ====== -->
+  <aside id="index-drawer" class="index-drawer" aria-label="Índice de temas">
+    <div class="index-drawer__head">
+      <h3 class="index-drawer__title">📚 Índice</h3>
+      <button id="drawer-close" class="index-drawer__close" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <div id="drawer-list" class="index-drawer__list"></div>
+  </aside>
+
+  <script>
+  // ====== Datos de temas buscables ======
+  const TOPICS = [
+    {
+      id: "introduccion-calculo-integral",
+      title: "Introducción al cálculo integral",
+      slug: "introduccion-calculo-integral",
+      definition:
+        "El cálculo integral estudia las áreas bajo curvas, acumulación de cantidades y procesos inversos a la derivada. Parte de la idea de la 'antiderivada' o integral indefinida F(x) tal que F'(x)=f(x), y culmina en la integral definida, que da un número asociado al área firmada entre una función y el eje x en un intervalo. También conecta con conceptos vistos en cálculo diferencial: límite, derivada y cambio instantáneo.",
+      example:
+        "Si f(x)=5x²+7x−9 entonces una antiderivada es F(x)= (5/3)x³+(7/2)x²−9x+C. La derivada de F vuelve a ser f. Esto es la base para luego calcular áreas con integrales definidas.",
+      subsections: [
+        { title:"Antiderivada", desc:"Una función F cuya derivada es f. ∫f(x)dx = F(x)+C." },
+        { title:"Integral definida", desc:"∫ₐᵇ f(x) dx como área firmada bajo la curva." }
+      ],
+      keywords: [
+        "introduccion","introducción","calculo integral","cálculo integral",
+        "antiderivada","integral definida","area bajo la curva","área bajo la curva",
+        "limite","derivada","clase 1"
+      ],
+    },
+
+    {
+      id: "teorema-fundamental-calculo",
+      title: "Teorema Fundamental del Cálculo",
+      slug: "teorema-fundamental-del-calculo",
+      definition:
+        "El Teorema Fundamental del Cálculo une derivar e integrar. (1) Si F'(x)=f(x), entonces ∫ₐᵇ f(x) dx = F(b) − F(a). Esto permite evaluar integrales definidas sin tener que aproximar áreas con sumas. (2) La función A(x)=∫ₐˣ f(t) dt tiene derivada A'(x)=f(x). Además se estudian propiedades de la integral definida: linealidad, aditividad por intervalos y simetría. Para funciones pares/impares en intervalos [−a,a] se simplifican muchos cálculos.",
+      example:
+        "Ejemplo directo: si f(x)=2x³−6x+3/(x²+1), una antiderivada es F(x)= (1/2)x⁴−3x²+3·arctan(x). Entonces ∫₀² f(x) dx = F(2) − F(0). También, si g(x) es impar, ∫₋ₐᵃ g(x) dx = 0.",
+      subsections: [
+        { title:"Funciones pares e impares", desc:"Atajos de simetría en [−a,a]." },
+        { title:"Linealidad", desc:"Separar integrales en sumas y constantes." }
+      ],
+      keywords: [
+        "teorema fundamental","fundamental del calculo","fundamental del cálculo",
+        "propiedades de la integral","simetria","simetría","funciones pares",
+        "funciones impares","integral definida","clase 2"
+      ],
+    },
+
+    {
+      id: "tecnicas-integracion",
+      title: "Técnicas de integración",
+      slug: "tecnicas-integracion",
+      definition:
+        "Conjunto de métodos sistemáticos para encontrar antiderivadas o resolver integrales que no salen 'a ojo'. Entre las más clásicas están: sustitución (cambio de variable), integración por partes (derivar una parte y antiderivar la otra), fracciones parciales (descomponer funciones racionales), integrales trigonométricas y trigonométricas inversas. La idea general es transformar la integral original en otra más fácil.",
+      example:
+        "Por partes: ∫ x·e^x dx.\nElegimos u = x  ⇒ du = dx.\nElegimos dv = e^x dx ⇒ v = e^x.\nEntonces ∫ x·e^x dx = u·v − ∫ v·du = x·e^x − ∫ e^x dx = x·e^x − e^x + C.",
+      subsections: [
+        { title:"Sustitución", desc:"Elegís u=g(x) para simplificar la integral." },
+        { title:"Fracciones parciales", desc:"Descomponer funciones racionales en sumas simples." }
+      ],
+      keywords: [
+        "tecnicas de integracion","técnicas de integración","metodos de integracion",
+        "métodos de integración","sustitucion","sustitución","fracciones parciales",
+        "trigonométricas","resolver integrales","clase 3"
+      ],
+    },
+
+    {
+      id: "integracion-por-partes",
+      title: "Integración por partes",
+      slug: "integracion-por-partes",
+      definition:
+        "Técnica basada en la fórmula ∫ u dv = u·v − ∫ v du. Sirve cuando la integral es un producto de funciones donde derivar una las simplifica (por ejemplo logaritmos o polinomios) y la otra es fácil de integrar. Muy útil en expresiones tipo x·ln x, x·sin(x), x·e^x, etc.",
+      example:
+        "Ejemplo: ∫ x·ln(x) dx.\nTomamos u = ln(x) ⇒ du = (1/x) dx.\nTomamos dv = x dx ⇒ v = x²/2.\nEntonces ∫ x·ln(x) dx = (x²/2)·ln(x) − ∫ (x²/2)·(1/x) dx = (x²/2)·ln(x) − ∫ (x/2) dx = (x²/2)·ln(x) − x²/4 + C.",
+      subsections: [
+        { title:"Elección de u y dv", desc:"u mejora al derivarla; dv es fácil de integrar." }
+      ],
+      keywords: [
+        "por partes","uv","integracion por partes","∫u dv","logaritmo","producto",
+        "x ln x","x e^x","x sin x","clase 3"
+      ],
+    },
+
+    {
+      id: "area-entre-curvas",
+      title: "Área entre curvas",
+      slug: "area-entre-curvas",
+      definition:
+        "El área entre dos funciones se obtiene integrando la diferencia entre la superior y la inferior. Si y = f(x) está arriba y y = g(x) está abajo en [a,b], entonces Área = ∫ₐᵇ [f(x) − g(x)] dx. Cuando las curvas están mejor descritas como x = f(y) y x = g(y), se integra respecto a y. Esto generaliza la idea de 'área bajo la curva' a regiones encerradas por varias curvas.",
+      example:
+        "Ejemplo típico: hallar el área encerrada por y = x² y y = 2x − x². Primero se igualan para encontrar puntos de corte: x² = 2x − x² ⇒ 2x² − 2x = 0 ⇒ 2x(x−1)=0 ⇒ x=0 y x=1.\nEn [0,1], la de arriba es 2x − x² y la de abajo es x².\nÁrea = ∫₀¹ [(2x − x²) − x²] dx = ∫₀¹ (2x − 2x²) dx = [x² − (2/3)x³]₀¹ = 1 − 2/3 = 1/3.",
+      subsections: [
+        { title:"Versión en x", desc:"Tiras verticales: ∫ (superior − inferior) dx." },
+        { title:"Versión en y", desc:"Tiras horizontales: ∫ (derecha − izquierda) dy." }
+      ],
+      keywords: [
+        "area entre curvas","área entre curvas","área encerrada","diferencia de funciones",
+        "teorema area","integral definida area","clase 5"
+      ],
+    },
+
+    {
+      id: "integrales-impropias",
+      title: "Integrales impropias",
+      slug: "integrales-impropias",
+      definition:
+        "Son integrales donde el intervalo es infinito (ej. [1, ∞)) o la función explota (tiene asíntotas). Se definen como límites. Una integral impropia 'converge' si ese límite da un número finito, y 'diverge' si no existe o es infinito. Permiten medir 'áreas infinitas' o acumulaciones en dominios ilimitados.",
+      example:
+        "1) ∫₁^∞ (1/x) dx = lim_{b→∞} ∫₁ᵇ (1/x) dx = lim_{b→∞} [ln(x)]₁ᵇ = lim_{b→∞} ln(b) = ∞ ⇒ diverge.\n2) ∫₋∞^∞ 1/(1+x²) dx = π. Ésta sí converge y es finita.",
+      subsections: [
+        { title:"Infinito en el límite", desc:"Intervalos a ∞ o −∞ (definición por límites)." },
+        { title:"Singularidades internas", desc:"Asíntotas dentro del intervalo: partir la integral y usar límites laterales." }
+      ],
+      keywords: [
+        "integral impropia","integrales impropias","infinito","convergencia",
+        "divergencia","limite en integrales","clase 6"
+      ],
+    },
+
+    {
+      id: "volumen-solidos-revolucion",
+      title: "Volúmenes de sólidos de revolución",
+      slug: "volumenes-solidos-revolucion",
+      definition:
+        "Si una región plana gira alrededor de un eje, genera un sólido 3D. Su volumen se halla con integración. Método de discos/arandelas: cortar el sólido en rebanadas perpendiculares al eje de giro. Cada rebanada es un disco (o anillo) de radio r(x), espesor dx, volumen aproximado π[r(x)]² dx. Sumando/integrando obtenemos el volumen exacto. Esto permite obtener volúmenes clásicos como el de la esfera, el cono u objetos raros.",
+      example:
+        "Una esfera de radio r puede verse al rotar y = √(r² − x²) alrededor del eje x. El volumen sale V = ∫₋ʳʳ π(r² − x²) dx = 4/3 · π · r³.",
+      subsections: [
+        { title:"Discos", desc:"V = ∫ π[R(x)]² dx (sólido macizo)." },
+        { title:"Arandelas", desc:"V = ∫ π(R_externo² − R_interno²) dx (con hueco)." }
+      ],
+      keywords: [
+        "volumen de revolucion","sólidos de revolución","discos","arandelas",
+        "método de discos","método de arandelas","volumen esfera","clase 7"
+      ],
+    },
+
+    {
+      id: "trabajo-e-integral",
+      title: "Trabajo con fuerza variable",
+      slug: "trabajo-con-fuerza-variable",
+      definition:
+        "El trabajo W de una fuerza que cambia con la posición no es F·d simplemente: hay que sumar (integrar) fuerza × desplazamiento a lo largo del recorrido. Ejemplos típicos: estirar un resorte (ley de Hooke F = kx), bombear agua desde un tanque (el peso del líquido en cada rebanada cambia con la altura), levantar una cuerda que se va aligerando. También se ve el valor promedio de una función en un intervalo como (1/(b−a))∫ₐᵇ f(x) dx.",
+      example:
+        "Resorte: si F(x)=k·x y queremos estirarlo de x=a a x=b, entonces el trabajo es W = ∫ₐᵇ kx dx = (k/2)(b²−a²). Ejemplo numérico: con k=800 N/m, estirar de 0.15 m a 0.18 m requiere W=∫₀.₁₅⁰.₁₈ 800x dx ≈ 1.56 J.",
+      subsections: [
+        { title:"Ley de Hooke", desc:"F(x)=k·x. Comportamiento lineal del resorte." },
+        { title:"Valor promedio", desc:"f_promedio = (1/(b−a)) ∫ₐᵇ f(x)dx." }
+      ],
+      keywords: [
+        "trabajo","fuerza variable","ley de hooke","resorte","bomba de agua",
+        "valor promedio de una funcion","valor promedio","clase 8"
+      ],
+    },
+
+    {
+      id: "vectores-3d",
+      title: "Vectores en el espacio",
+      slug: "vectores-3d",
+      definition:
+        "En 3D un punto tiene coordenadas (x,y,z). Un vector ⟨a,b,c⟩ representa dirección y magnitud en ese espacio. La distancia entre P₁(x₁,y₁,z₁) y P₂(x₂,y₂,z₂) es √[(x₂−x₁)²+(y₂−y₁)²+(z₂−z₁)²]. También se ve el vector dirección entre dos puntos, el vector unitario (mismo sentido pero magnitud 1) y el producto punto, que sirve para ángulos y trabajo mecánico.",
+      example:
+        "Si P₁=(2,−1,7) y P₂=(1,−3,5), entonces →P₁P₂ = ⟨1−2, −3−(−1), 5−7⟩ = ⟨−1, −2, −2⟩. La distancia entre P₁ y P₂ es √[(-1)²+(-2)²+(-2)²] = √9 = 3.",
+      subsections: [
+        { title:"Vector unitario", desc:"v̂ = v/||v||. Magnitud 1, misma dirección." },
+        { title:"Producto punto", desc:"a·b = |a||b|cosθ. Útil para ángulos y trabajo." }
+      ],
+      keywords: [
+        "vectores","espacio tridimensional","coordenadas 3d","distancia 3d",
+        "vector unitario","producto punto","trabajo","clase 9"
+      ],
+    },
+
+    {
+      id: "producto-cruz-plano",
+      title: "Producto cruz y plano en 3D",
+      slug: "producto-cruz-y-plano",
+      definition:
+        "El producto cruz (o vectorial) entre dos vectores en 3D da un nuevo vector perpendicular a ambos. Su magnitud representa el área del paralelogramo que forman. Con el producto cruz se define el torque (momento de torsión) τ = r × F y también un vector normal a un plano. Con un vector normal ⟨A,B,C⟩ y un punto (x₀,y₀,z₀) se puede escribir la ecuación de un plano: A(x−x₀)+B(y−y₀)+C(z−z₀)=0.",
+      example:
+        "Torque: si aplico una fuerza de magnitud 40 N en el extremo de una llave de 0.25 m con ángulo de 75°, el momento aproximado es τ = r·F·sin(θ) ≈ 0.25·40·sin(75°) ≈ 9.66 N·m.",
+      subsections: [
+        { title:"Producto cruz", desc:"Vector perpendicular; área del paralelogramo." },
+        { title:"Ecuación del plano", desc:"A(x−x₀)+B(y−y₀)+C(z−z₀)=0 con normal ⟨A,B,C⟩." }
+      ],
+      keywords: [
+        "producto cruz","producto vectorial","torque","momento de torsion",
+        "momento de torsión","plano","vector normal","ecuacion del plano","clase 11"
+      ],
+    },
+
+    {
+      id: "derivadas-parciales",
+      title: "Derivadas parciales",
+      slug: "derivadas-parciales",
+      definition:
+        "Cuando una función depende de varias variables (por ejemplo z = f(x,y)), podemos estudiar cómo cambia con respecto a una sola variable, manteniendo las demás fijas. Eso es la derivada parcial. fx(x,y) mide cómo cambia f si movés x un poquito y dejás y fijo. Estas ideas se usan en superficies de varias variables, temperatura en el espacio, etc. También aparecen las superficies de nivel: curvas o superficies donde f(x,y,z)=k es constante.",
+      example:
+        "Si f(x,y)=x³ + x²y³ − 2y²:\nfx(x,y)=3x²+2xy³, así fx(2,1)=16.\nfy(x,y)=3x²y²−4y, así fy(2,1)=8.\nEso te dice qué tan sensible es f a cambios en x o en y, en el punto (2,1).",
+      subsections: [
+        { title:"Superficies/curvas de nivel", desc:"f(x,y)=k o f(x,y,z)=k." },
+        { title:"Orden superior", desc:"fxx, fxy, fyx, fyy; bajo suavidad, fxy=fyx." }
+      ],
+      keywords: [
+        "derivada parcial","derivadas parciales","fx","fy","multivariable",
+        "superficies de nivel","curvas de nivel","clase 12"
+      ],
+    },
+
+    {
+      id: "regla-de-la-cadena-multivariable",
+      title: "Regla de la cadena (multivariable)",
+      slug: "regla-cadena-multivariable",
+      definition:
+        "Extiende la regla de la cadena de una variable al caso en que z depende de x e y, y a su vez x e y dependen de otro parámetro (t) o de más parámetros (s,t). Básicamente: si z=f(x,y), x=g(t), y=h(t), entonces dz/dt = (∂f/∂x)(dx/dt) + (∂f/∂y)(dy/dt). Esto permite encontrar razones de cambio totales aunque las variables estén relacionadas de manera indirecta.",
+      example:
+        "Si z = x²y + 3xy⁴ con x = sin(2t) y y = cos(t), entonces dz/dt se calcula sustituyendo fx, fy, dx/dt y dy/dt en la fórmula. Al evaluar en t=0 se obtiene dz/dt = 6. Ese 6 es la rapidez instantánea de cambio de z con respecto a t en ese punto.",
+      subsections: [
+        { title:"Caso 1 (una variable t)", desc:"dz/dt = fx·x'(t)+fy·y'(t)." },
+        { title:"Caso 2 (dos parámetros)", desc:"dz/ds y dz/dt usando parciales y derivadas de x(s,t), y(s,t)." }
+      ],
+      keywords: [
+        "regla de la cadena","multivariable","dz/dt","cambio total","dependencia indirecta",
+        "parametrizacion","parametrización","clase 13"
+      ],
+    },
+
+    {
+      id: "extremos-multivariable",
+      title: "Máximos y mínimos en varias variables",
+      slug: "maximos-minimos-2variables",
+      definition:
+        "Para funciones f(x,y) se buscan puntos críticos donde fx=0 y fy=0. Luego se usa la prueba de la segunda derivada (matriz Hessiana) para clasificar si el punto es máximo local, mínimo local o punto de silla. También se pueden buscar extremos absolutos en una región cerrada analizando bordes. Es la versión 2D (o 3D) de lo que ya hacías con máximos y mínimos en una variable.",
+      example:
+        "Si f(x,y)=x²+y²−4x−6y+13, calculás fx=2x−4 y fy=2y−6. Igualando a 0: x=2, y=3. Al evaluar f(2,3)=0. Ese punto es un mínimo (la forma es parabólica hacia arriba).",
+      subsections: [
+        { title:"Punto crítico", desc:"fx=0 y fy=0." },
+        { title:"Clasificación", desc:"Hessiano para decidir mínimo, máximo o silla." }
+      ],
+      keywords: [
+        "maximo","máximo","minimo","mínimo","punto critico","puntos criticos",
+        "hessiano","segunda derivada","extremos relativos","clase 14"
+      ],
+    },
+
+    {
+      id: "integrales-dobles",
+      title: "Integrales dobles",
+      slug: "integrales-dobles",
+      definition:
+        "Una integral doble ∬_D f(x,y) dA acumula valores de f sobre una región D del plano. Sirve para calcular área (si f=1), masa (si f es densidad superficial), promedios, etc. La región D puede ser un rectángulo o una región más general. Muchas veces se evalúa convirtiéndola en una integral iterada: ∫[x=a→b] ∫[y=g1(x)→g2(x)] f(x,y) dy dx (región tipo 1) o al revés (tipo 2).",
+      example:
+        "Si D está limitada por y=2x² y y=1+x², se puede describir como tipo 1: x va de −1 a 1 y para cada x, y va de 2x² a 1+x². Entonces ∬_D (x+2y) dA = ∫_{x=-1}^{1} ∫_{y=2x²}^{1+x²} (x+2y) dy dx. Ese proceso convierte el área curva en una suma ordenada.",
+      subsections: [
+        { title:"Región tipo I / II", desc:"Elegí describir en x o en y según convenga." },
+        { title:"Interpretación física", desc:"Masa si f es densidad superficial." }
+      ],
+      keywords: [
+        "integral doble","integrales dobles","region tipo 1","region tipo 2",
+        "area bajo superficie","masa superficial","clase 14","semana 14","tipo 1","tipo 2"
+      ],
+    },
+
+    {
+      id: "integrales-triples",
+      title: "Integrales triples",
+      slug: "integrales-triples",
+      definition:
+        "La integral triple ∭_E f(x,y,z) dV suma valores de f en todo un volumen 3D E. Se usa para volumen (si f=1), masa (si f es densidad volumétrica), centro de masa, etc. En cajas rectangulares se puede usar una versión 3D del Teorema de Fubini para evaluarla como integrales iteradas una tras otra. Para regiones más complicadas (como un tetraedro) se describe el sólido con cotas en z, luego y, luego x (o en otro orden) y se integra paso a paso.",
+      example:
+        "Ejemplo caja: Si B = {0≤x≤1, −1≤y≤2, 0≤z≤3} y queremos ∭_B x·y·z² dV, integramos primero en x, luego en y, luego en z. Para una región piramidal (tetraedro) limitada por x=0, y=0, z=0 y x+y+z=1, podemos describir 0≤z≤1−x−y, 0≤y≤1−x, 0≤x≤1 y evaluar ∭ z dV, que da un valor finito.",
+      subsections: [
+        { title:"Fubini (3D)", desc:"Permite evaluar como integrales iteradas." },
+        { title:"Interpretación física", desc:"Masa total si f es densidad volumétrica." }
+      ],
+      keywords: [
+        "integral triple","integrales triples","fubini 3d","volumen en 3d",
+        "densidad volumetrica","tetraedro","caja rectangular","clase 15","semana 15"
+      ],
+    },
+  ];
+
+  // Colores / tema visual dinámico
+  const THEMES = {
+    default: { accent:"#38bdf8", t1:"#0ea5e95e", t2:"#22c55e3d" },
+
+    "introduccion-calculo-integral": { accent:"#38bdf8", t1:"#38bdf85e", t2:"#22c55e33" },
+    "teorema-fundamental-calculo":   { accent:"#38bdf8", t1:"#38bdf85e", t2:"#22c55e33" },
+
+    "tecnicas-integracion":          { accent:"#38bdf8", t1:"#38bdf85e", t2:"#22c55e33" },
+    "integracion-por-partes":        { accent:"#a78bfa", t1:"#a78bfa4d", t2:"#22c55e26" },
+
+    "area-entre-curvas":             { accent:"#22c55e", t1:"#22c55e3d", t2:"#38bdf82e" },
+    "integrales-impropias":          { accent:"#fbbf24", t1:"#fbbf2433", t2:"#38bdf826" },
+
+    "volumen-solidos-revolucion":    { accent:"#e879f9", t1:"#e879f94d", t2:"#38bdf826" },
+    "trabajo-e-integral":            { accent:"#60a5fa", t1:"#60a5fa4d", t2:"#22c55e26" },
+
+    "vectores-3d":                   { accent:"#34d399", t1:"#34d39933", t2:"#38bdf826" },
+    "producto-cruz-plano":           { accent:"#a78bfa", t1:"#a78bfa4d", t2:"#22c55e26" },
+
+    "derivadas-parciales":           { accent:"#f43f5e", t1:"#f43f5e40", t2:"#0ea5e933" },
+    "regla-de-la-cadena-multivariable": { accent:"#f43f5e", t1:"#f43f5e40", t2:"#0ea5e933" },
+
+    "extremos-multivariable":        { accent:"#facc15", t1:"#facc1540", t2:"#22c55e26" },
+
+    "integrales-dobles":             { accent:"#38bdf8", t1:"#38bdf85e", t2:"#22c55e33" },
+    "integrales-triples":            { accent:"#a78bfa", t1:"#a78bfa4d", t2:"#22c55e26" },
+  };
+
+  const FUNNY = [
+    "Ni los de la USAC con 10 años de carrera lo han visto.",
+    "Lo busqué en la feria del libro… solo vendían atol y fotocopias.",
+    "Busqué hasta en los apuntes del maje que siempre saca 100, y ni así.",
+    "Error 404: tema no encontrado (Fijo nada que ver con calculo 2).",
+    "Nada vos… ni el maje de la primera fila tiene apuntes de eso.",
+    "Nada. Igual tranqui, a veces el profe tampoco lo explica 😏.",
+    "Ni los del congreso saben que es. Pajas ellos no saben nada jaja",
+  ];
+
+  // ====== Helpers ======
+  const $ = (sel) => document.querySelector(sel);
+  const $form = $('#search-form');
+  const $q = $('#q');
+  const $empty = $('#empty');
+  const $result = $('#result');
+  const $title = $('#res-title');
+  const $def = $('#res-def');
+  const $ex = $('#res-ex');
+  const $subs = $('#res-subs');
+
+  // Drawer y overlay
+  const $btnIndex = $('#btn-index');
+  const $drawer   = $('#index-drawer');
+  const $dClose   = $('#drawer-close');
+  const $dList    = $('#drawer-list');
+  const $overlay  = $('#index-overlay');
+
+  const normalize = (s) =>
+    s.toLowerCase()
+     .normalize('NFD')
+     .replace(/\p{Diacritic}/gu,'')
+     .trim();
+
+  function search(q){
+    if(!q) return null;
+    const nq = normalize(q);
+    for(const t of TOPICS){
+      const hay = normalize([
+        t.title,
+        t.definition,
+        t.example,
+        ...(t.keywords||[])
+      ].join(' '));
+      if(hay.includes(nq)) return t;
+    }
+    return null;
+  }
+
+  function setTheme(key){
+    const t = THEMES[key] || THEMES.default;
+    const root = document.documentElement;
+    root.style.setProperty('--accent', t.accent);
+    root.style.setProperty('--t1', t.t1);
+    root.style.setProperty('--t2', t.t2);
+    if (window.__calcParticlesResize) requestAnimationFrame(window.__calcParticlesResize);
+  }
+
+  function renderSubsections(list){
+    $subs.innerHTML = "";
+    if(!list || !list.length){
+      $subs.style.display = "none";
+      return;
+    }
+    $subs.style.display = "block";
+    list.forEach(block=>{
+      const div = document.createElement("div");
+      div.className = "subs-block";
+      div.innerHTML = `<h4>${block.title}</h4><p>${block.desc}</p>`;
+      $subs.appendChild(div);
+    });
+  }
+
+  function showEmpty(msg){
+    $empty.textContent = msg;
+    $empty.style.display = 'block';
+    $result.style.display = 'none';
+    setTheme('default');
+  }
+
+  function showResult(t){
+    $title.textContent = t.title;
+    $def.textContent   = t.definition;
+    $ex.textContent    = t.example;
+    renderSubsections(t.subsections || []);
+    $result.style.display = 'block';
+    $empty.style.display = 'none';
+    setTheme(t.id);
+  }
+
+  // ====== Índice lateral (solo títulos) ======
+  function buildDrawerList(){
+    $dList.innerHTML = "";
+    TOPICS.forEach(topic=>{
+      const item = document.createElement("div");
+      item.className = "index-drawer__item";
+      item.textContent = topic.title;
+      item.addEventListener("click", ()=>{
+        showResult(topic);
+        $q.value = topic.title;
+        closeDrawer();
+      });
+      $dList.appendChild(item);
+    });
+  }
+
+  function openDrawer(){
+    buildDrawerList();
+    $drawer.classList.add('open');   // slide-in
+    $overlay.classList.add('show');  // mostrar overlay
+  }
+  function closeDrawer(){
+    $drawer.classList.remove('open'); // slide-out
+    $overlay.classList.remove('show'); // ocultar overlay
+  }
+
+  // Botones del índice
+  $btnIndex.addEventListener('click', openDrawer);
+  $dClose.addEventListener('click', closeDrawer);
+  $overlay.addEventListener('click', closeDrawer);
+
+  // ====== manejo del form de búsqueda ======
+  $form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const q = $q.value;
+    if(!q.trim()){
+      showEmpty('Escribí un tema de cálculo para empezar ✍️');
+      return;
+    }
+    const found = search(q);
+    if(found){
+      showResult(found);
+    }else{
+      showEmpty(
+        FUNNY[Math.floor(Math.random()*FUNNY.length)]
+        + `\n(No hay resultados para "${q}")`
+      );
+    }
+  });
+
+  // Estado inicial
+  showEmpty('Escribí un tema de cálculo para empezar ✍️');
+
+  // ====== Partículas (con overscan y tamaño a viewport) ======
+  (function calcParticles(){
+    const canvas = document.getElementById('calc-particles');
+    const ctx = canvas.getContext('2d', { alpha: true });
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const OV = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--overscan')) || 16;
+
+    const GLYPHS = ['∫','Σ','π','∂','√','∞','lim','dx'];
+    const COLORS  = ['#38bdf8','#22c55e','#e879f9','#fbbf24','#f43f5e','#a78bfa','#34d399','#60a5fa'];
+
+    let CSSW=0, CSSH=0, W=0, H=0, symbols=[];
+    let mouse={x:0,y:0};
+
+    function resize(){
+      // tamaño = viewport + overscan a cada lado
+      CSSW = Math.max(1, window.innerWidth  + OV*2);
+      CSSH = Math.max(1, window.innerHeight + OV*2);
+      W = Math.round(CSSW * DPR);
+      H = Math.round(CSSH * DPR);
+      canvas.width = W;
+      canvas.height = H;
+
+      // Escalar a DPR y desplazar origen a (-OV,-OV) en unidades CSS
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(DPR, DPR);
+      ctx.translate(OV, OV);
+
+      spawn();
+    }
+
+    const rand = (a,b)=> a + Math.random()*(b-a);
+    const pick = (arr)=> arr[Math.floor(Math.random()*arr.length)];
+
+    function spawn(){
+      const count = Math.max(60, Math.min(120,
+        Math.round((CSSW*CSSH)/20000)
+      ));
+      symbols = Array.from({length: count}, ()=> ({
+        g: pick(GLYPHS),
+        x: Math.random() * CSSW - OV,
+        y: Math.random() * CSSH - OV,
+        z: rand(.6, 1.6),
+        vx: rand(-.25, .25),
+        vy: rand(.15, .55),
+        r: rand(-.02, .02),
+        a: rand(0, Math.PI*2),
+        color: pick(COLORS)
+      }));
+    }
+
+    function step(){
+      // limpiar todo el lienzo con overscan
+      ctx.clearRect(-OV, -OV, CSSW, CSSH);
+
+      const parx = ((mouse.x+OV)/CSSW - .5) * 6;
+      const pary = ((mouse.y+OV)/CSSH - .5) * 6;
+
+      // líneas conectando símbolos
+      ctx.save();
+      ctx.strokeStyle = '#93c5fd';
+      for(let i=0;i<symbols.length;i++){
+        for(let j=i+1;j<symbols.length;j++){
+          const a = symbols[i], b = symbols[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const dist = Math.hypot(dx,dy);
+          if(dist < 120){
+            ctx.globalAlpha = 0.12 * (1 - dist/120);
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.restore();
+
+      symbols.forEach(s=>{
+        s.x += s.vx + parx*0.01*s.z;
+        s.y += s.vy + pary*0.01*s.z;
+        s.a += s.r;
+
+        // wrap con overscan
+        if(s.x < -OV-30) s.x = CSSW-OV+30;
+        if(s.x > CSSW-OV+30) s.x = -OV-30;
+        if(s.y > CSSH-OV+30) {
+          s.y = -OV-30;
+          s.x = Math.random() * CSSW - OV;
+        }
+
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(s.a);
+        ctx.font = `${18*s.z + 8}px ui-sans-serif, system-ui`;
+        ctx.fillStyle = s.color;
+        ctx.globalAlpha = 0.78;
+        ctx.fillText(s.g, 0, 0);
+        ctx.restore();
+      });
+
+      requestAnimationFrame(step);
+    }
+
+    function onMouse(e){
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    }
+
+    window.addEventListener('resize', resize, {passive:true});
+    window.addEventListener('orientationchange', resize, {passive:true});
+    window.addEventListener('mousemove', onMouse, {passive:true});
+    document.addEventListener('visibilitychange', ()=> {
+      if(!document.hidden) resize();
+    });
+
+    resize();
+    requestAnimationFrame(step);
+
+    // re-resize para cambios de theme dinámico
+    window.__calcParticlesResize = () => { resize(); };
+  })();
+  </script>
+
+</body>
+</html>
