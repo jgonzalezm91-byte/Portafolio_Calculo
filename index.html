@@ -15,7 +15,7 @@
       --t1: #0ea5e95e;
       --t2: #22c55e3d;
       --t3: #ffffff08;
-      --overscan: 16px;        /* margen extra para cubrir cortes */
+      --overscan: 16px;        /* Margen adicional de renderizado */
     }
 
     *{box-sizing:border-box}
@@ -29,7 +29,7 @@
       overflow-x:hidden;
     }
 
-    /* Capa base del fondo: gradiente oscuro continuo SIN cortes */
+    /* Capa base: gradiente de fondo continuo */
     .bg-base{
       position:fixed;
       inset: calc(var(--overscan) * -1);
@@ -45,7 +45,7 @@
       transform:translateZ(0);
     }
 
-    /* Capa partículas */
+    /* Capa de partículas animadas */
     .bg-wrap{
       position:fixed;
       inset: calc(var(--overscan) * -1);
@@ -61,7 +61,7 @@
       filter:contrast(1.05) saturate(1.05);
     }
 
-    /* Luces de color y viñetas */
+    /* Efectos de luz y viñeta */
     .bg-vignette{
       position:fixed;
       inset: calc(var(--overscan) * -1);
@@ -186,7 +186,7 @@
       white-space:pre-line;
     }
 
-    /* Flipbook fijo */
+    /* Flipbook integrado */
     .flipbook{
       margin-top:24px;
       border:1px solid var(--border);
@@ -230,10 +230,10 @@
       border:0;
       background:#000;
       display:block;
-      border-radius:0; /* el libro trae su propio borde interno */
+      border-radius:0; /* Borde interno aplicado por el flipbook */
     }
 
-    /* ====== SUBSECCIONES DEL RESULTADO ====== */
+    /* Subsecciones del resultado */
     .subs{
       margin-top:16px;
       border-top:1px solid var(--border);
@@ -260,7 +260,7 @@
       white-space:pre-line;
     }
 
-    /* ====== OVERLAY OSCURO DETRÁS DEL ÍNDICE ====== */
+    /* Overlay oscuro del índice */
     .index-overlay{
       position:fixed;
       inset:0;
@@ -269,7 +269,7 @@
       pointer-events:none;
       transition:opacity .28s cubic-bezier(.22,1,.36,1);
       z-index: ninetyNine;
-      /* z-index alto pero debajo del drawer */
+      /* z-index elevado, debajo del drawer */
       z-index:99;
     }
     .index-overlay.show{
@@ -277,18 +277,18 @@
       pointer-events:auto;
     }
 
-    /* ====== BARRA LATERAL (ÍNDICE) ====== */
+    /* Barra lateral (índice) */
     .index-drawer{
       position:fixed;
       top:0; right:0; bottom:0;
       width:min(360px, 90vw);
-      background:#0f172acc; /* coherente con tu card */
+      background:#0f172acc; /* Coherente con card */
       backdrop-filter: blur(6px);
       border-left:1px solid var(--border);
       box-shadow: -12px 0 30px rgba(2,8,23,.45);
       transform: translateX(100%);
       transition: transform .28s cubic-bezier(.22,1,.36,1);
-      z-index:100; /* por encima de overlay */
+      z-index:100; /* Por encima del overlay */
       display:flex;
       flex-direction:column;
     }
@@ -362,7 +362,7 @@
 </head>
 <body>
 
-  <!-- Fondo en capas SIN cortes -->
+  <!-- Fondo en capas múltiples -->
   <div class="bg-base"></div>
   <div class="bg-wrap"><canvas id="calc-particles"></canvas></div>
   <div class="bg-vignette" aria-hidden="true"></div>
@@ -384,17 +384,17 @@
 
     <main>
       <div class="card">
-        <!-- Buscador -->
+        <!-- Formulario de búsqueda -->
         <form class="search" id="search-form">
           <input id="q" class="input" placeholder="Ej: Técnicas de integración" autocomplete="off" />
           <button class="btn" type="submit">Buscar</button>
           <button class="btn" type="button" id="btn-index">Índice</button>
         </form>
 
-        <!-- Mensaje vacío / no encontrado -->
+        <!-- Mensaje de estado vacío -->
         <div id="empty" class="empty"></div>
 
-        <!-- Resultado del tema -->
+        <!-- Resultado de búsqueda -->
         <section id="result" class="result">
           <div class="box">
             <h2 id="res-title">—</h2>
@@ -409,7 +409,7 @@
           </div>
         </section>
 
-        <!-- Flipbook SIEMPRE visible (iframe fijo) -->
+        <!-- Flipbook integrado (iframe permanente) -->
         <section class="flipbook">
           <div class="flipbook__head">
             <div class="flipbook__title">
@@ -435,10 +435,10 @@
     <footer>HECHO CON ❤️ PARA APRENDER CÁLCULO</footer>
   </div>
 
-  <!-- ====== OVERLAY DEL ÍNDICE ====== -->
+  <!-- Overlay del índice -->
   <div id="index-overlay" class="index-overlay"></div>
 
-  <!-- ====== BARRA LATERAL (ÍNDICE) ====== -->
+  <!-- Barra lateral (índice) -->
   <aside id="index-drawer" class="index-drawer" aria-label="Índice de temas">
     <div class="index-drawer__head">
       <h3 class="index-drawer__title">📚 Índice</h3>
@@ -448,7 +448,7 @@
   </aside>
 
   <script>
-  // ====== Datos de temas buscables ======
+  // Base de datos de temas
   const TOPICS = [
     {
       id: "introduccion-calculo-integral",
@@ -723,7 +723,7 @@
     },
   ];
 
-  // Colores / tema visual dinámico
+  // Temas visuales por tema
   const THEMES = {
     default: { accent:"#38bdf8", t1:"#0ea5e95e", t2:"#22c55e3d" },
 
@@ -761,7 +761,7 @@
     "Ni los del congreso saben que es. Pajas ellos no saben nada jaja",
   ];
 
-  // ====== Helpers ======
+  // Funciones auxiliares
   const $ = (sel) => document.querySelector(sel);
   const $form = $('#search-form');
   const $q = $('#q');
@@ -772,7 +772,7 @@
   const $ex = $('#res-ex');
   const $subs = $('#res-subs');
 
-  // Drawer y overlay
+  // Referencias del drawer y overlay
   const $btnIndex = $('#btn-index');
   const $drawer   = $('#index-drawer');
   const $dClose   = $('#drawer-close');
@@ -841,7 +841,7 @@
     setTheme(t.id);
   }
 
-  // ====== Índice lateral (solo títulos) ======
+  // Construcción del índice lateral
   function buildDrawerList(){
     $dList.innerHTML = "";
     TOPICS.forEach(topic=>{
@@ -859,20 +859,20 @@
 
   function openDrawer(){
     buildDrawerList();
-    $drawer.classList.add('open');   // slide-in
-    $overlay.classList.add('show');  // mostrar overlay
+    $drawer.classList.add('open');   // Mostrar drawer
+    $overlay.classList.add('show');  // Mostrar overlay
   }
   function closeDrawer(){
-    $drawer.classList.remove('open'); // slide-out
-    $overlay.classList.remove('show'); // ocultar overlay
+    $drawer.classList.remove('open'); // Ocultar drawer
+    $overlay.classList.remove('show'); // Ocultar overlay
   }
 
-  // Botones del índice
+  // Eventos del índice
   $btnIndex.addEventListener('click', openDrawer);
   $dClose.addEventListener('click', closeDrawer);
   $overlay.addEventListener('click', closeDrawer);
 
-  // ====== manejo del form de búsqueda ======
+  // Manejo del formulario de búsqueda
   $form.addEventListener('submit', (e)=>{
     e.preventDefault();
     const q = $q.value;
@@ -894,7 +894,7 @@
   // Estado inicial
   showEmpty('Escribí un tema de cálculo para empezar ✍️');
 
-  // ====== Partículas (con overscan y tamaño a viewport) ======
+  // Animación de partículas de fondo
   (function calcParticles(){
     const canvas = document.getElementById('calc-particles');
     const ctx = canvas.getContext('2d', { alpha: true });
@@ -908,7 +908,7 @@
     let mouse={x:0,y:0};
 
     function resize(){
-      // tamaño = viewport + overscan a cada lado
+      // Dimensiones viewport + overscan
       CSSW = Math.max(1, window.innerWidth  + OV*2);
       CSSH = Math.max(1, window.innerHeight + OV*2);
       W = Math.round(CSSW * DPR);
@@ -916,7 +916,7 @@
       canvas.width = W;
       canvas.height = H;
 
-      // Escalar a DPR y desplazar origen a (-OV,-OV) en unidades CSS
+      // Escalar DPR y desplazar origen
       ctx.setTransform(1,0,0,1,0,0);
       ctx.scale(DPR, DPR);
       ctx.translate(OV, OV);
@@ -945,13 +945,13 @@
     }
 
     function step(){
-      // limpiar todo el lienzo con overscan
+      // Limpiar canvas completo
       ctx.clearRect(-OV, -OV, CSSW, CSSH);
 
       const parx = ((mouse.x+OV)/CSSW - .5) * 6;
       const pary = ((mouse.y+OV)/CSSH - .5) * 6;
 
-      // líneas conectando símbolos
+      // Líneas conectando símbolos
       ctx.save();
       ctx.strokeStyle = '#93c5fd';
       for(let i=0;i<symbols.length;i++){
@@ -976,7 +976,7 @@
         s.y += s.vy + pary*0.01*s.z;
         s.a += s.r;
 
-        // wrap con overscan
+        // Wrapping con overscan
         if(s.x < -OV-30) s.x = CSSW-OV+30;
         if(s.x > CSSW-OV+30) s.x = -OV-30;
         if(s.y > CSSH-OV+30) {
@@ -1012,7 +1012,7 @@
     resize();
     requestAnimationFrame(step);
 
-    // re-resize para cambios de theme dinámico
+    // Redimensionar para cambios de tema
     window.__calcParticlesResize = () => { resize(); };
   })();
   </script>
